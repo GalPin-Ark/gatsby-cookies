@@ -5,9 +5,12 @@
  * See: https://www.gatsbyjs.com/docs/use-static-query/
  */
 
-import * as React from "react"
+import React, { useState, useEffect, Suspense } from "react"
 import PropTypes from "prop-types"
 import { useStaticQuery, graphql } from "gatsby"
+import Preloader from './Preloader'
+import LoaderConsent from "./LoaderConsent"
+import useCookie from './useCookie';
 
 import Header from "./header"
 import "./layout.css"
@@ -22,29 +25,55 @@ const Layout = ({ children }) => {
       }
     }
   `)
+  const [item, setValue] = useCookie('loader');
+
+  useEffect(() => {
+    if (typeof window !== `undefined`) {
+      window.addEventListener('load', () => {
+        setDisplayDelay(1000);
+      });
+    }
+    setDisplayDelay(3000);
+    return () => {
+      window.removeEventListener('load', null);
+    };
+  });
+  const setDisplayDelay = m => {
+    setTimeout(function () {
+      if (!item) {
+        setValue('true')
+      }
+    }, m);
+  };
 
   return (
     <>
-      <Header siteTitle={data.site.siteMetadata?.title || `Title`} />
-      <div
-        style={{
-          margin: `0 auto`,
-          maxWidth: 960,
-          padding: `0 1.0875rem 1.45rem`,
-        }}
-      >
-        <main>{children}</main>
-        <footer
-          style={{
-            marginTop: `2rem`,
-          }}
-        >
-          © {new Date().getFullYear()}, Built with
-          {` `}
-          <a href="https://www.gatsbyjs.com">Gatsby</a>
-        </footer>
-      </div>
+
+
+      {item !== 'true' ?
+        <Preloader /> : <>
+          <Header siteTitle={data.site.siteMetadata?.title || `Title`} />
+
+          <main style={{
+            margin: `0 auto`,
+            maxWidth: 960,
+            padding: `0 1.0875rem 1.45rem`,
+          }}>{children}</main>
+          <footer
+            style={{
+              marginTop: `2rem`,
+            }}
+          >
+            © {new Date().getFullYear()}, Built with
+            {` `}
+            <a href="https://www.gatsbyjs.com">Gatsby</a>
+          </footer>
+        </>
+      }
+
     </>
+
+
   )
 }
 
